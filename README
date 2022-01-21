@@ -1,0 +1,7 @@
+SERIAL:
+Use command make for compiling, then use ./cornerDetection nameFoto.jpg for starting the algorithm.
+Use make clean for cleaning the compilation.
+
+PARALLEL:
+Use command make for compiling, then use mpirun -n 4 ./cornerDetection nameFoto.jpg for starting the algorithm (with 4 cores).
+Use make clean for cleaning the compilation.
