@@ -149,8 +149,7 @@ void cornerDetection::findKeyPoints(const Mat& image) { //Function that uses the
     printf("matrix's columns are:  %d\n",greyScaleImage.cols);
     printf("convertPixelToGreyScale() has finished its task\nScanning each pixel with pixelScan() and for keyPoints push_back()\n");
     for(int y=3; y<greyScaleImage.rows-3; y++) { //Segmentation fault if i use y=0 (it is not possible to analyze with values ​​greater than 5 (image limits))
-        for(int x=3; x<greyScaleImage.cols-3; x++) {	//@@@@@@@@@@@@   potrei far avere ad ogni processore slave una parte della matrice? utilizzando MPI_Send inviando la porzione specifica ad ogni
-							//@@@@@@@@@@@@   processore, e poi ricevere i soli valori dei keyPoint trovati
+        for(int x=3; x<greyScaleImage.cols-3; x++) {	
        	    if (pixelScan(greyScaleImage,x,y)) {
             	keyPoints.push_back(Point(x,y));	//Vector that contains the detected points
                  

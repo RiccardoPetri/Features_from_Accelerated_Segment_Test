@@ -20,9 +20,7 @@ class cornerDetection {
     int getGreyScalePixelIntensity(const Mat& image, const int& x, const int& y); //Function to return the intensity in grey scale of a given pixel
     CircumferenceInfo calculateCircumferenceInfo(const Mat& image, const int x, const int y, const int r); /* Function to return circumference pixels information 
     													   given the image, the coordinates of pixel p and the radius */
-    int size; 
-    int count = 0;													   
-    int calculateFacingAngle(const CircumferenceInfo& cd); //Function to determine the angle which the consecutive brighter or darker pixel is facing
+    int size; 												   
     bool pixelScan(const Mat& image, const int x, const int y); //Function to scan pixels in order to determine if they are corners
   public:
     cornerDetection();

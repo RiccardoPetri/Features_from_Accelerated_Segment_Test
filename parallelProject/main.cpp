@@ -15,23 +15,20 @@ int main(int argc, char* argv[]) {
 
 	MPI_Status status;
 	int myrank, size;
-	int numbCols, cc,rest, restOverlap ;
+	int numbCols, PortionRows,rest, restOverlap ;
 	int rows, columns, sizeMaster;
 	int sizeMasterTail = 0;
-	vector<Point> keyPointsFound;
-	vector<Point> keyMaster;
-	vector<Point> keyMasterTail;
-	vector<Point> keyFinal;
-	Mat greyScaleImage; 
-	Mat filledMatrix;
-	Mat restMatrix;
+	vector<Point> keyPointsFound;		//Vector used to store keypoints found by slaves
+	vector<Point> keyMaster;		//Vector used to store keypoints by Master
+	vector<Point> keyMasterTail;		//Vector used to store keypoints of the rest of the matrix by Master
+	vector<Point> keyFinal;			//Vector used to store every keypoint at the end
+	Mat greyScaleImage; 			//Reference to the converted image in greyscale
+	Mat filledMatrix;			//Portion of image analyzed by slaves
+	Mat restMatrix;				//Portion of matrix analyzed by the master due to the rest of division
 
 
 	cornerDetection corner;	
-	Mat rootImage, keyPointImage;		/*Mat is a structure that maintains matrix / image characteristics (number of rows and columns, data type, etc.) and a pointer to the data.
-						  So nothing prevents us from having several instances of Mat corresponding to the same data. A Mat maintains a reference count indicating
-						  whether data should be deallocated when a particular Mat instance is destroyed.
-						*/
+	Mat rootImage, keyPointImage;	
 
 	// 1-Initialize MPI
 	MPI_Init(&argc, &argv);
@@ -42,12 +39,8 @@ int main(int argc, char* argv[]) {
 
 
 	MPI_Datatype pointStruct;
-  	MPI_Type_contiguous(2, MPI_INT, &pointStruct);
+  	MPI_Type_contiguous(2, MPI_INT, &pointStruct);		//Struct used to send and receive keypoints
   	MPI_Type_commit(&pointStruct);
-
-	MPI_Datatype twoPointStruct;
-  	MPI_Type_contiguous(1, pointStruct, &twoPointStruct);
-  	MPI_Type_commit(&twoPointStruct);
 
 
 	
@@ -58,7 +51,7 @@ int main(int argc, char* argv[]) {
 			return -1;
 		}
 			
-		rootImage = imread(argv[1], CV_LOAD_IMAGE_COLOR);       //with these, we split the three rgb value of a pixel into a matrix, 	
+		rootImage = imread(argv[1], CV_LOAD_IMAGE_COLOR);       //With these, we split the three rgb value of a pixel into a matrix, 	
 		keyPointImage = imread(argv[1], CV_LOAD_IMAGE_COLOR);   //so if we scan the new columns we have triplet of the r-g-b value of each pixel
 		
 		if(!rootImage.data) {
@@ -66,41 +59,30 @@ int main(int argc, char* argv[]) {
 			return -1;
 		}
 	
-		//cout<<"getGreyScaleImage() invoked\n";
 
 
-		greyScaleImage = corner.getGreyScaleImage(keyPointImage); //this matrix must be splitted for all the processors
+		greyScaleImage = corner.getGreyScaleImage(keyPointImage); //This matrix will be splitted among all processors
 
 
 		columns = greyScaleImage.cols;
 		rows = greyScaleImage.rows;
-
-		//q = columns / size;	//number of column that will be sent
-		cc = rows / size;
-		rest = rows % size;
-		restOverlap = 0;
+	
+		PortionRows = rows / size; //Number of rows that will be sent
+		rest = rows % size; //Portion of rows remaining in Master after the splitting
+		restOverlap = 0; 
 		if(rest > 3) {
 			restOverlap = rest+6;
-		}
-		printf("rest vale %d\n", rest);					//OKAY MA SE IL RESTO È 3 COME ORA? TROPPO POCO!!!
-										//MENTRE SE NON FACCIO REST? NON SAREBBE MEGLIO?
+		}				
 		
-		MPI_Bcast(&cc, 1, MPI_INT, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&PortionRows, 1, MPI_INT, 0, MPI_COMM_WORLD);		//Broadcasting the number of rows 
 	
 
 
-		//int vec[greyScaleImage.rows*greyScaleImage.cols] = { 0 };
-		Mat flat = greyScaleImage.reshape(1, greyScaleImage.total());	//SE LO FACESSIMO APPENA CREATA LA MATRICE? (NEL METODO convertPixelToGreyScale())???
+		Mat flat = greyScaleImage.reshape(1, greyScaleImage.total());		//Converting the matrix into a vector to send pixel values
 		vector<int> vec = greyScaleImage.isContinuous()? flat : flat.clone();
 
-		//cout << greyScaleImage;
-
 		int vecSize = static_cast<int>(vec.size());
-		printf("aaa %d\n", vecSize);
 
-		
-
-		//int size_v = static_cast<int>(vec.size())/3;
 	
 		int v[vecSize];
 
@@ -110,36 +92,34 @@ int main(int argc, char* argv[]) {
 		}					
 		
 
-
-		int new_cc = cc - 6;
-		int new_ccc = cc + 6;
+		int PortionRows_Overlap = PortionRows + 6;
 
 		
-		// master sends only a portion of the original image to all slaves
+		// Master sends only a portion of the original image to all the slaves
 		for (int p = 1; p < size; p++) {
 
-			MPI_Send(&v[(((cc*p)-6)*columns)], (new_ccc)*columns, MPI_INT, p, 555, MPI_COMM_WORLD);						       
+			MPI_Send(&v[(((PortionRows*p)-6)*columns)], (PortionRows_Overlap)*columns, MPI_INT, p, 555, MPI_COMM_WORLD);						       
 		}
 
 
-		filledMatrix = Mat(cc, columns, CV_32S, &v[0]); //instead of the vec3b we have int (for each pixel)!!!
+		filledMatrix = Mat(PortionRows, columns, CV_32S, &v[0]); //Matrix that will be analyzed by Master
 		
 
 		if(rest > 3) {
-			restMatrix = Mat(restOverlap, columns, CV_32S, &v[vecSize-(restOverlap*columns)]);
+			restMatrix = Mat(restOverlap, columns, CV_32S, &v[vecSize-(restOverlap*columns)]);	//Portion of matrix remaining from the splitting will be analyzed by Master
 		}
 
 		
 
-		//master computes operation of the vector's head
-		keyMaster = corner.pushKeyPointsInVector(filledMatrix, myrank, cc);
+		//Master computes operation of the vector's head
+		keyMaster = corner.pushKeyPointsInVector(filledMatrix, myrank, PortionRows);
 		sizeMaster = (int)keyMaster.size();
 
 		
 		
 		if(rest > 3) {
-			//master computes operation of the vectorìs tail
-			keyMasterTail = corner.pushKeyPointsInVector(restMatrix, size, cc);
+			//Master computes operation of the vector's tail
+			keyMasterTail = corner.pushKeyPointsInVector(restMatrix, size, PortionRows);
 			sizeMasterTail = (int)keyMasterTail.size();
 		}
 	}
@@ -150,48 +130,34 @@ int main(int argc, char* argv[]) {
 
 		
 		MPI_Bcast(&numbCols, 1, MPI_INT, 0, MPI_COMM_WORLD);
-		//printf("I'm the slave %d; I receivedddd %d from process 0.\n", myrank, numbCols);
 
 
-		MPI_Bcast(&cc, 1, MPI_INT, 0, MPI_COMM_WORLD);
-		//printf("I'm the slave %d; I received %d from process 0.\n", myrank, cc);
+		MPI_Bcast(&PortionRows, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
 		
-		//int new_cc = cc - 6;
-		int new_ccc = cc + 6;
+		int PortionRows_Overlap = PortionRows + 6;
 
 		int numberOfCols = numbCols;
 
-		int receiveVec[new_ccc*numberOfCols];
-		//int receiveVec[cc*numberOfCols];
+		int receiveVec[PortionRows_Overlap*numberOfCols];  //Vector used to store pixel values from the Master's send
 		
 		Mat filledMatrix;
 
-		// slaves receive a small vector...
-		MPI_Recv(&receiveVec[0], (new_ccc)*numberOfCols, MPI_INT, 0, 555, MPI_COMM_WORLD, &status);
-		//MPI_Recv(receiveVec, (cc)*numberOfCols, MPI_INT, 0, 555, MPI_COMM_WORLD, &status);
+		MPI_Recv(&receiveVec[0], (PortionRows_Overlap)*numberOfCols, MPI_INT, 0, 555, MPI_COMM_WORLD, &status);
 
-		filledMatrix = Mat(new_ccc, numberOfCols, CV_32S, &receiveVec[0]);
-		//filledMatrix = Mat(new_ccc, numberOfCols, CV_32S, &receiveVec[0]);
 
-		//cout << filledMatrix;
+		filledMatrix = Mat(PortionRows_Overlap, numberOfCols, CV_32S, &receiveVec[0]);
 
-		keyPointsFound = corner.pushKeyPointsInVector(filledMatrix, myrank, cc);
+		keyPointsFound = corner.pushKeyPointsInVector(filledMatrix, myrank, PortionRows);	//This method stores found keypoints into a vector
 
 		int sizeOfVec = (int)keyPointsFound.size();
-		//printf("slalve %d keeeeeeeeeeeeeeyyyyyyyyyyyyy %d\n",myrank ,sizeOfVec);
 
 		
-		MPI_Send(&sizeOfVec, 1, MPI_INT, 0, 554, MPI_COMM_WORLD);
+		MPI_Send(&sizeOfVec, 1, MPI_INT, 0, 554, MPI_COMM_WORLD);				//Send vector dimension to Master
 		
 
-		MPI_Send(&keyPointsFound[0] , sizeOfVec, twoPointStruct, 0, 556, MPI_COMM_WORLD);
+		MPI_Send(&keyPointsFound[0] , sizeOfVec, pointStruct, 0, 556, MPI_COMM_WORLD);		//Used to send back results to Master
 		
-		
-
-
-
-		//MPI_Barrier(MPI_COMM_WORLD);
 
 	}
 
@@ -206,7 +172,7 @@ int main(int argc, char* argv[]) {
 	
 			for(int p=1; p<size; p++){
 
-				MPI_Recv(&sizeOfVec[p-1], 1, MPI_INT, p, 554, MPI_COMM_WORLD, &status);
+				MPI_Recv(&sizeOfVec[p-1], 1, MPI_INT, p, 554, MPI_COMM_WORLD, &status);		//Master receives sizes of each vector from slaves
 				finalArrayDim += sizeOfVec[p-1];
 				
 			}
@@ -214,7 +180,7 @@ int main(int argc, char* argv[]) {
 			vector<Point> keyFinal(finalArrayDim+sizeMasterTail);	
 			
 			
-			copy(keyMaster.begin(), keyMaster.end(), keyFinal.begin());
+			copy(keyMaster.begin(), keyMaster.end(), keyFinal.begin());			//Insert all keypoints in a unique vector
 			
 
 			if(restOverlap > 3) {
@@ -226,48 +192,13 @@ int main(int argc, char* argv[]) {
 
 
 			for(int p=1; p<size; p++){
-
-				//printf("dimmmmm %d\n", dimension);
-				//printf("zzzz %d\n", (int)sizeOfVec[p-1]);
 			
-				MPI_Recv(&keyFinal[dimension], (int)sizeOfVec[p-1], twoPointStruct, p, 556, MPI_COMM_WORLD, &status);
-				//printf("DIM1 %d\n", dimension);
+				MPI_Recv(&keyFinal[dimension], (int)sizeOfVec[p-1], pointStruct, p, 556, MPI_COMM_WORLD, &status);	//Master receives keypoints from slaves
 				dimension+= (int)sizeOfVec[p-1];
-				//printf("DIM2 %d\n", dimension);
-				//printf("rexxxxxxx %d\n", (int)sizeOfVec[p-1]);
 			}
-
-			//printf("ssssssssssssssssss %d\n", sizeMaster);
-
-//__________________________________________________________________________________________________________________________________
-
-/*
-			for (int p = 1; p < size; p++){		
-			printf("ssssssssssssssssss %d\n", (int)sizeOfVec[p-1]);
-				for(int j=sizeMaster; j < sizeMaster+(int)sizeOfVec[p-1]; j++)	{
-					
-
-
-						int vall= (int)keyFinal[j].y;
-						printf("vallll %d\n", vall);
-
-						keyFinal[j].y = vall - 6;
-						printf("vallll %d\n", vall);
-				}
-			sizeMaster += (int)sizeOfVec[p-1];
-			}
-
-/*
-			for(int j = finalArrayDim; j < (finalArrayDim+sizeMasterTail) ; j++)	{
-					
-				keyFinal[j].y = keyFinal[j].y + (((size+1)*cc)-6);
-			}
-*/
-//__________________________________________________________________________________________________________________________________
 
 
 		//MPI_Barrier(MPI_COMM_WORLD);
-		printf("ssssssssssssssssss %d\n", keyFinal.size());
 		cout<<"showKeyPoint() invoked\n";
 		corner.showKeyPoints(rootImage, keyFinal);	
 
@@ -279,7 +210,7 @@ int main(int argc, char* argv[]) {
 		waitKey(0);
 	}
 
-	MPI_Finalize();	//@@@@@ VEDERE SE METTERE ALLA FINE DELLE OPERAZ PARALLELE
+	MPI_Finalize();
 
 	return 0;
 }

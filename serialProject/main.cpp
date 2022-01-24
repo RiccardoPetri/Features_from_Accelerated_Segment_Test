@@ -32,12 +32,6 @@ int main(int argc, char* argv[]) {
 	}
 
 
-	
-
-	//@@@@@@@@@@@@  Mat greyScaleImage = convertPixelToGreyScale(image);       converrebbe metterlo qui in modo da far avere la matrice a tutti gli slaves?
-
-
-	//@@@@@@@@@@@@  findKeyPoints(const Mat& image)       devo metterlo nel main e gestire i passaggi dei parametri in base al rank?
 
 	cout<<"findKeyPoints() invoked\n";
 	corner.findKeyPoints(keyPointImage);

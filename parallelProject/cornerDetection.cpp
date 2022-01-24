@@ -26,10 +26,10 @@ cornerDetection::cornerDetection(){}
 
 
 
-Mat cornerDetection::convertPixelToGreyScale(const Mat& image) { //This function return the matrix of the pixels after
+Mat cornerDetection::convertPixelToGreyScale(const Mat& image) { //This function return the matrix of the pixels after converting it into greyscale
 
-    Mat greyScaleMatrix(image);	//take a ref called greyScaleMatrix (image is already a MAT, so it is already splitted in 3 contigous vertical r-g-b value for each pixel, 
-				//but here we want to do a avarage!!
+    Mat greyScaleMatrix(image);	//takes a ref called greyScaleMatrix (image is already a MAT, so it is already splitted in 3 contigous vertical r-g-b value for each pixel, 
+				//but here we want to do an avarage!!
 
     Mat matrice(greyScaleMatrix.rows, greyScaleMatrix.cols, CV_32S);
    
@@ -47,15 +47,6 @@ Mat cornerDetection::convertPixelToGreyScale(const Mat& image) { //This function
 }
 
 
-/*
-int cornerDetection::getGreyScalePixelIntensity(const Mat& image, const int& x, const int& y) { // Function to obtain pixel intensity from coordinates
-   
-    int pixelIntensityValue=-1;
-    const Vec3b* ptr = image.ptr<Vec3b>(y);
-    pixelIntensityValue = ptr[x][0]; //Gives to greyScaleMatrix the first channel value (equal to the other 2) to return an integer that represents the pixel(X,Y) grey level intensity
-    return pixelIntensityValue;
-}
-*/
 
 int cornerDetection::getGreyScalePixelIntensity(const Mat& image, const int& x, const int& y) { // Function to obtain pixel intensity from coordinates
    
@@ -69,11 +60,6 @@ int cornerDetection::getGreyScalePixelIntensity(const Mat& image, const int& x, 
 CircumferenceInfo cornerDetection::calculateCircumferenceInfo(const Mat& image, const int x, const int y, const int r) { //Function used to search on the circumference the longest consecutive 
 															 //BRIGHTER_PIXEL or DARKER_PIXEL pixels which means a corner
       int pixel_p_intensity = getGreyScalePixelIntensity(image,x,y);
-      //int pixel_p_intensity = image(x, y, CV_32S);
-	
-
-	//const int* ptr = image.ptr<int>(y);
-        //int pixel_p_intensity = ptr[x];
 
 
     vector<Point> circumferenceValues = getCircumference(x, y, r); //Vector of points, so each value has x and y
@@ -91,15 +77,11 @@ CircumferenceInfo cornerDetection::calculateCircumferenceInfo(const Mat& image, 
         int comparisonPixel_x = circumferenceValues[i%circumferenceVectorDimension].x;
         int comparisonPixel_y = circumferenceValues[i%circumferenceVectorDimension].y;
         int comparisonPixelIntensity = getGreyScalePixelIntensity(image, comparisonPixel_x, comparisonPixel_y);
-	//int comparisonPixelIntensity = (int)image(comparisonPixel_x, comparisonPixel_y, CV_32S);
 
-	//const int* ptrr = image.ptr<int>(comparisonPixel_y);
-        //int comparisonPixelIntensity = ptrr[comparisonPixel_x];
-	
 	
         if (pixel_p_intensity > comparisonPixelIntensity + THRESHOLD) {	//Case in which p has a brighter intensity than the pixel considered on the circumference
             if (i==0) {
-                angle=getAngle(i%circumferenceVectorDimension,r); //% Operator providing the remainder of the division (1/8 -> getAngle("case 1", radius) 
+                angle=getAngle(i%circumferenceVectorDimension,r); //% Operator providing the remainder of the division (1/8 -> getAngle("case 1", radius)) 
             } else if (intensity == DARKER_PIXEL) {
                 consecutive++; //If the last circumference pixel "comparisonPixelIntensity" is a DARKER_PIXEL and now we are into this condition, we have two consecutive dark pixels -> consecutive++
             } else {
@@ -178,17 +160,9 @@ Mat cornerDetection::getGreyScaleImage(const Mat& image) { //Function that uses 
     int numbCols = greyScaleImage.cols;
     printf("matrix's rows are:  %d\n",numbRows);
     printf("matrix's columns are:  %d\n",greyScaleImage.cols);
-    printf("convertPixelToGreyScale() has finished its task\nScanning each pixel with pixelScan() and for keyPoints push_back()\n");
+    printf("convertPixelToGreyScale() has finished its task\nScanning each pixel with pixelScan() and for keyPoints push_back()\n");		
 
-
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
-
-    MPI_Bcast(&numbCols, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-
-    //int MPI_Scatterv(			//qua invieremo la porzione di immagine ad ogni slave
-
-    //bloccati fino a ricevere tutti i dati con il gatherV
+    MPI_Bcast(&numbCols, 1, MPI_INT, 0, MPI_COMM_WORLD);       //Broadcasting the number of columns of the image matrix to all the slaves
 
        
     return greyScaleImage;
@@ -204,37 +178,21 @@ vector<Point> cornerDetection::pushKeyPointsInVector(const Mat& portionMatrix, i
     
     int value = 0;
  
-    if(count == 1){
-        value = ((rank*(portionRow)));
-	value = value-6;
-    }
-    else if(rank!=0){
-    	value = ((rank*(portionRow)));
-	value = value-6;			//ma se metto - 6*rank funziona
+   
+    if(rank!=0){
+    	value = ((rank*(portionRow)));			
+	value = value-6;			//Shifts point obtained using overlap
     }
 
 
-	//controllare
     for(int y=3; y<portionMatrix.rows-3; y++) { //Segmentation fault if i use y=0 (it is not possible to analyze with values ​​greater than 5 (image limits))
-        for(int x=3; x<portionMatrix.cols-3; x++) {	//@@@@@@@@@@@@   potrei far avere ad ogni processore slave una parte della matrice? utilizzando MPI_Send inviando la porzione specifica ad ogni
-							//@@@@@@@@@@@@   processore, e poi ricevere i soli valori dei keyPoint trovati
-       	    
-
+        for(int x=3; x<portionMatrix.cols-3; x++) {	
 		if (pixelScan(portionMatrix,x,y)) {
-		
-			//if(y+value < 200 ){
 				keyPoints.push_back(Point(x,y+value));
-		    	//keyPoints.push_back(Point(x+(rank*portionRow),y));	//Vector that contains the detected points
-		        //keyPoints.push_back(Point(x,y));
-			//}
-			//else {
-			//	keyPoints.push_back(Point(x,y+value-(6*(rank-1))));
-			//}
             	}
         }
     }
 
-    count++;
     return keyPoints;
 }
 

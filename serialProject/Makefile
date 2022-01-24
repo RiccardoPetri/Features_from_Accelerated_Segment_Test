@@ -4,7 +4,7 @@
 CC=g++ #for C++ is g++
 
 # compiler flags:
-CFLAGS=-g -Wall -std=c++14 #  -g     - this flag adds debugging information to the executable file
+CFLAGS=-g -save-temps -Wa,-adhln -fverbose-asm -Wall -std=c++14 #  -g     - this flag adds debugging information to the executable file
  			   #  -Wall  - this flag is used to turn on most compiler warnings
 			   #  -std   - standard used for C++, it includes features for the language core and extends the standard library
 SRCS=\
@@ -14,6 +14,8 @@ cornerDetection.cpp
 
 OBJS=$(SRCS:.cpp=.o) #places the object files .o in an OBJS subdirectory within the src directory
 DEPS=$(SRCS:.cpp=.d) #.d files included in the DEPS macro 
+SAVE= $(SRCS:.cpp=.s)
+II= $(SRCS:.cpp=.ii)
 #(.d -> For C/C++ source files they determine what #include files are required and automatically generate that information into the .d file)  
 
 #The -I. is included so that g++ will look in the current directory
@@ -35,4 +37,4 @@ cornerDetection: $(OBJS)
 
 #rule for cleaning up your source and object directories if you type make clean.
 clean:
-	$(RM) cornerDetection $(OBJS) $(DEPS) #The second target label ‘clean’ removes all the files, with $(RM) for example we have rm -rf
+	$(RM) cornerDetection $(OBJS) $(DEPS) $(SAVE) $(II) #The second target label ‘clean’ removes all the files, with $(RM) for example we have rm -rf
