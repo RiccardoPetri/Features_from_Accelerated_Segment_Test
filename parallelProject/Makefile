@@ -4,7 +4,7 @@
 CC=mpic++ #for C++ is mpic++
 
 # compiler flags:
-CFLAGS=-g -save-temps -Wa,-adhln -fverbose-asm -Wall -std=c++14 #  -g     - this flag adds debugging information to the executable file
+CFLAGS=-g -Wall -std=c++14 #  -g     - this flag adds debugging information to the executable file
  			   #  -Wall  - this flag is used to turn on most compiler warnings
 			   #  -std   - standard used for C++, it includes features for the language core and extends the standard library
 SRCS=\
