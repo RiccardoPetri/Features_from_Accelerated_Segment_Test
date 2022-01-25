@@ -2,7 +2,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <mpi.h>
-#include <time.h>	
+#include <chrono>	
 
 #include <cornerDetection.h>	//Header file of the cornerDetection implementation contains class definitions
 				//and functions, instead the implementation of the class goes into the .cpp file		
@@ -13,7 +13,7 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
 
-	clock_t tStart = clock();
+	auto start = chrono::steady_clock::now();
     	/* Do your stuff here */
 	MPI_Status status;
 	int myrank, size;
@@ -47,6 +47,8 @@ int main(int argc, char* argv[]) {
 
 	
 	if (myrank == 0) {
+
+		
 
 		if(argc!=2) {
 			cerr<<"ERROR: correct syntax is ./cornerDetection imageName.jpg"<<endl;		
@@ -208,13 +210,15 @@ int main(int argc, char* argv[]) {
 		
 		imshow("Displayed Image", rootImage);			//This OpenCV function allows to display the final result in a previously defined window
 	
-
+		auto end = chrono::steady_clock::now();
+		auto diff = end - start;
+		cout << chrono::duration <double, milli> (diff).count() << " ms" << endl;
 		waitKey(0);
 	}
-
+	
 	MPI_Finalize();
 	
-    	printf("Time taken: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
+
 
 	return 0;
 }
