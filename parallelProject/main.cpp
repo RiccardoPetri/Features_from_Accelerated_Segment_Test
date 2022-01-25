@@ -1,7 +1,8 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <mpi.h>	
+#include <mpi.h>
+#include <time.h>	
 
 #include <cornerDetection.h>	//Header file of the cornerDetection implementation contains class definitions
 				//and functions, instead the implementation of the class goes into the .cpp file		
@@ -12,7 +13,8 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
 
-
+	clock_t tStart = clock();
+    	/* Do your stuff here */
 	MPI_Status status;
 	int myrank, size;
 	int numbCols, PortionRows,rest, restOverlap ;
@@ -211,6 +213,8 @@ int main(int argc, char* argv[]) {
 	}
 
 	MPI_Finalize();
+	
+    	printf("Time taken: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
 
 	return 0;
 }
