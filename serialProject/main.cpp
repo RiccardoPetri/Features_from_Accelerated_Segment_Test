@@ -41,16 +41,18 @@ int main(int argc, char* argv[]) {
 	corner.findKeyPoints(keyPointImage);
 	
 	cout<<"showKeyPoint() invoked\n";
-	corner.showKeyPoints(rootImage);	
+	corner.showKeyPoints(rootImage);
+
+	auto end = chrono::steady_clock::now();
+	auto diff = end - start;
+	cout << chrono::duration <double, milli> (diff).count() << " ms" << endl;
+	
 
 	namedWindow("Displayed Image", CV_WINDOW_NORMAL); 	//This OpenCV function with CV_WINDOW_NORMAL allows to resize the window
 	
 	imshow("Displayed Image", rootImage);			//This OpenCV function allows to display the final result in a previously defined window
 	
-	auto end = chrono::steady_clock::now();
-	auto diff = end - start;
-	cout << chrono::duration <double, milli> (diff).count() << " ms" << endl;
-
+	
 
 	waitKey(0);
 	
