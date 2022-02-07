@@ -1,7 +1,29 @@
+We have chosen to implement an algorithm for the recognition of the corners given any image.
+
 SERIAL:
+
+The algorithm allows to do an analysis of all the pixels of the image with the aim of finding a small number of values.
+In particular, given the enormous amount of data present in an image, only the points with more information will be searched to detect the target of interest,
+that is, those that represent corners.
+In fact, we talk about Corner Detection Method.
+As first step there is a conversion of the color image into a grayscale image and then the execution of the algorithm,
+which provides for each pixel p to consider the pixels on the circumference of radius r which has p as center.
+The execution consists in evaluating the whole circumference, and if the intensity of 12 contiguous pixels is higher or lower than p, then p is a
+corner, and it is called key point.
+
+
 Use command make for compiling, then use ./cornerDetection nameFoto.jpg for starting the algorithm.
 Use make clean for cleaning the compilation.
 
+
+
+
+
 PARALLEL:
+
+This version allows to split the input image from a process called master and sending each portion of data (as an array of int values) from the master to slaves.
+Slaves could be a cluster of machines or different cores of the same computer. 
+
+
 Use command make for compiling, then use mpirun -n numberOfCores ./cornerDetection nameFoto.jpg for starting the algorithm (with numberOfCores cores).
 Use make clean for cleaning the compilation.
