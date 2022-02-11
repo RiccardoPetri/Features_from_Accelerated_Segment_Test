@@ -175,64 +175,6 @@ int getAngle(int index, int radius)			//The function returns the angle given the
             exit(EXIT_FAILURE);
         }
         break;
-    case 4:
-        switch(index) {
-        case 0: return 0;
-        case 1: return 18;
-        case 2: return 36;
-        case 3: return 54;
-        case 4: return 72;
-        case 5: return 90;
-        case 6: return 108;
-        case 7: return 126;
-        case 8: return 144;
-        case 9: return 162;
-        case 10: return 180;
-        case 11: return 198;
-        case 12: return 216;
-        case 13: return 234;
-        case 14: return 252;
-        case 15: return 270;
-        case 16: return 288;
-        case 17: return 306;
-        case 18: return 324;
-        case 19: return 342;
-        default:
-            cerr<<"ERROR: invalid index with radius 4"<<endl;
-            exit(EXIT_FAILURE);
-        }
-        break;
-    case 5:
-        switch(index) {
-        case 0: return 0;
-        case 1: return 15;
-        case 2: return 30;
-        case 3: return 45;
-        case 4: return 60;
-        case 5: return 75;
-        case 6: return 90;
-        case 7: return 105;
-        case 8: return 120;
-        case 9: return 135;
-        case 10: return 150;
-        case 11: return 165;
-        case 12: return 180;
-        case 13: return 195;
-        case 14: return 210;
-        case 15: return 225;
-        case 16: return 240;
-        case 17: return 255;
-        case 18: return 270;
-        case 19: return 285;
-        case 20: return 300;
-        case 21: return 315;
-        case 22: return 330;
-        case 23: return 345;
-        default:
-            cerr<<"ERROR: invalid index with radius 5"<<endl;
-            exit(EXIT_FAILURE);
-        }
-        break;
     default:
         cerr<<"ERROR: input radius not declare"<<endl;
         exit(EXIT_FAILURE);

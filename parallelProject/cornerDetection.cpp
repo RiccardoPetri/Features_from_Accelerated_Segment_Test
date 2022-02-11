@@ -136,6 +136,41 @@ CircumferenceInfo cornerDetection::calculateCircumferenceInfo(const Mat& image, 
 }
 
 
+int cornerDetection::calculateFacingAngle(const CircumferenceInfo& cInfo) { //Function used to return the angle opposite to the consecutive darkness
+									   // or brightness 
+
+    int meanAngle = -1;
+    if (cInfo.darkConsecutive > cInfo.brightConsecutive) {
+        meanAngle = (cInfo.startDarkAngle + cInfo.endDarkAngle) / 2;
+    } else {
+        meanAngle = (cInfo.startBrightAngle + cInfo.endBrightAngle) / 2;
+    }
+    return meanAngle;
+}
+
+
+
+bool cornerDetection::noiseEliminator(const Mat& image, const int x, const int y) { //Function used to eliminate found corners that are characterized by noise
+										    //They can be recognized by facing angles, infact noise angles have different directions
+
+    CircumferenceInfo cInfo2 = calculateCircumferenceInfo(image, x, y, 2);
+    CircumferenceInfo cInfo3 = calculateCircumferenceInfo(image, x, y, 3);
+
+    int facingAngle2 = calculateFacingAngle(cInfo2);
+    int facingAngle3 = calculateFacingAngle(cInfo3);
+
+
+
+    int delta23 = abs(facingAngle2-facingAngle3); //Difference between angles to verify if they have noise
+
+
+    if (delta23 < ANGULAR_THRESHOLD) { //Check if angles have similar directions, if true they are mantained
+        return true;
+    } else {
+        return false;
+    }
+}
+
 
 bool cornerDetection::pixelScan(const Mat& image, const int x, const int y) { //Function that represents the basic FAST algorithm activity
 
@@ -188,7 +223,9 @@ vector<Point> cornerDetection::pushKeyPointsInVector(const Mat& portionMatrix, i
     for(int y=3; y<portionMatrix.rows-3; y++) { //Segmentation fault if i use y=0 (it is not possible to analyze with values ​​greater than 5 (image limits))
         for(int x=3; x<portionMatrix.cols-3; x++) {	
 		if (pixelScan(portionMatrix,x,y)) {
+			if(noiseEliminator(portionMatrix,x,y)) {
 				keyPoints.push_back(Point(x,y+value));
+			}
             	}
         }
     }
