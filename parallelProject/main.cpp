@@ -127,16 +127,18 @@ int main(int argc, char* argv[]) {
 		keyMaster = corner.pushKeyPointsInVector(filledMatrix, myrank, PortionRows);
 		sizeMaster = (int)keyMaster.size();
 
-		auto end = chrono::steady_clock::now();
-		auto diff = end - start;
-		cout << chrono::duration <double, milli> (diff).count() << " ms" << endl;
-		
+
 		
 		if(rest > 3) {
 			//Master computes operation of the vector's tail
 			keyMasterTail = corner.pushKeyPointsInVector(restMatrix, size, PortionRows);
 			sizeMasterTail = (int)keyMasterTail.size();
 		}
+
+		auto end = chrono::steady_clock::now();
+		auto diff = end - start;
+		cout << chrono::duration <double, milli> (diff).count() << " ms" << endl;
+		
 
 
 
