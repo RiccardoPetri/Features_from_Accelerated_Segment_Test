@@ -185,7 +185,7 @@ void cornerDetection::findKeyPoints(const Mat& image) { //Function that uses the
         for(int x=3; x<greyScaleImage.cols-3; x++) {	
        	    if (pixelScan(greyScaleImage,x,y)) {
 		if(noiseEliminator(greyScaleImage,x,y)) {
-            		keyPoints.push_back(Point(x,y));	//Vector that contains the detected points
+            		keyPoints.push_back(Point(x,y)); //Vector that contains the detected points
                 }
             }
         }

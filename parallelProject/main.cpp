@@ -13,7 +13,7 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
 
-	auto start = chrono::steady_clock::now();
+//	auto start = chrono::steady_clock::now();
     	/* Do your stuff here */
 	MPI_Status status;
 	int myrank, size;
@@ -27,6 +27,10 @@ int main(int argc, char* argv[]) {
 	Mat greyScaleImage; 			//Reference to the converted image in greyscale
 	Mat filledMatrix;			//Portion of image analyzed by slaves
 	Mat restMatrix;				//Portion of matrix analyzed by the master due to the rest of division
+
+
+
+
 
 
 	cornerDetection corner;	
@@ -45,7 +49,11 @@ int main(int argc, char* argv[]) {
   	MPI_Type_commit(&pointStruct);
 
 
+
 	
+	
+
+
 	if (myrank == 0) {
 
 		
@@ -113,12 +121,15 @@ int main(int argc, char* argv[]) {
 			restMatrix = Mat(restOverlap, columns, CV_32S, &v[vecSize-(restOverlap*columns)]);	//Portion of matrix remaining from the splitting will be analyzed by Master
 		}
 
-		
+		auto start = chrono::steady_clock::now();
 
 		//Master computes operation of the vector's head
 		keyMaster = corner.pushKeyPointsInVector(filledMatrix, myrank, PortionRows);
 		sizeMaster = (int)keyMaster.size();
 
+		auto end = chrono::steady_clock::now();
+		auto diff = end - start;
+		cout << chrono::duration <double, milli> (diff).count() << " ms" << endl;
 		
 		
 		if(rest > 3) {
@@ -126,9 +137,13 @@ int main(int argc, char* argv[]) {
 			keyMasterTail = corner.pushKeyPointsInVector(restMatrix, size, PortionRows);
 			sizeMasterTail = (int)keyMasterTail.size();
 		}
+
+
+
 	}
 
 
+	
 
 	if (myrank != 0) {
 
@@ -206,9 +221,9 @@ int main(int argc, char* argv[]) {
 		cout<<"showKeyPoint() invoked\n";
 		corner.showKeyPoints(rootImage, keyFinal);	
 
-		auto end = chrono::steady_clock::now();
-		auto diff = end - start;
-		cout << chrono::duration <double, milli> (diff).count() << " ms" << endl;
+//		auto end = chrono::steady_clock::now();
+//		auto diff = end - start;
+//		cout << chrono::duration <double, milli> (diff).count() << " ms" << endl;
 
 
 		namedWindow("Displayed Image", CV_WINDOW_NORMAL); 	//This OpenCV function with CV_WINDOW_NORMAL allows to resize the window
