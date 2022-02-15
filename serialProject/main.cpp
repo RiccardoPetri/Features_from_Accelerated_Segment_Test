@@ -14,7 +14,6 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
 
-	auto start = chrono::steady_clock::now();
 	if(argc!=2) {
 		cerr<<"ERROR: correct syntax is ./cornerDetection imageName.jpg"<<endl;		
 		return -1;
@@ -43,9 +42,7 @@ int main(int argc, char* argv[]) {
 	cout<<"showKeyPoint() invoked\n";
 	corner.showKeyPoints(rootImage);
 
-	auto end = chrono::steady_clock::now();
-	auto diff = end - start;
-	cout << chrono::duration <double, milli> (diff).count() << " ms" << endl;
+	
 	
 
 	namedWindow("Displayed Image", CV_WINDOW_NORMAL); 	//This OpenCV function with CV_WINDOW_NORMAL allows to resize the window

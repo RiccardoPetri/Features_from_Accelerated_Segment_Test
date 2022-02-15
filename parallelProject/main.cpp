@@ -13,7 +13,8 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
 
-//	auto start = chrono::steady_clock::now();
+	auto start = chrono::steady_clock::now();
+
     	/* Do your stuff here */
 	MPI_Status status;
 	int myrank, size;
@@ -27,10 +28,6 @@ int main(int argc, char* argv[]) {
 	Mat greyScaleImage; 			//Reference to the converted image in greyscale
 	Mat filledMatrix;			//Portion of image analyzed by slaves
 	Mat restMatrix;				//Portion of matrix analyzed by the master due to the rest of division
-
-
-
-
 
 
 	cornerDetection corner;	
@@ -121,8 +118,6 @@ int main(int argc, char* argv[]) {
 			restMatrix = Mat(restOverlap, columns, CV_32S, &v[vecSize-(restOverlap*columns)]);	//Portion of matrix remaining from the splitting will be analyzed by Master
 		}
 
-		auto start = chrono::steady_clock::now();
-
 		//Master computes operation of the vector's head
 		keyMaster = corner.pushKeyPointsInVector(filledMatrix, myrank, PortionRows);
 		sizeMaster = (int)keyMaster.size();
@@ -134,11 +129,6 @@ int main(int argc, char* argv[]) {
 			keyMasterTail = corner.pushKeyPointsInVector(restMatrix, size, PortionRows);
 			sizeMasterTail = (int)keyMasterTail.size();
 		}
-
-		auto end = chrono::steady_clock::now();
-		auto diff = end - start;
-		cout << chrono::duration <double, milli> (diff).count() << " ms" << endl;
-		
 
 
 
@@ -232,6 +222,9 @@ int main(int argc, char* argv[]) {
 		
 		imshow("Displayed Image", rootImage);			//This OpenCV function allows to display the final result in a previously defined window
 	
+		auto end = chrono::steady_clock::now();
+		auto diff = end - start;
+		cout << chrono::duration <double, milli> (diff).count() << " ms" << endl;
 		
 		waitKey(0);
 	}
