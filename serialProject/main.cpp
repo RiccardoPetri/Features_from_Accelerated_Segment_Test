@@ -4,9 +4,7 @@
 
 #include <cornerDetection.h>	//Header file of the cornerDetection implementation contains class definitions
 				//and functions, instead the implementation of the class goes into the .cpp file		
-#include <iostream>
-
-#include <chrono>	
+#include <iostream>	
 	
 	
 using namespace cv;

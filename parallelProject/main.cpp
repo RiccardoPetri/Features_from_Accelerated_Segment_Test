@@ -2,8 +2,6 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <mpi.h>
-#include <chrono>	
-
 #include <cornerDetection.h>	//Header file of the cornerDetection implementation contains class definitions
 				//and functions, instead the implementation of the class goes into the .cpp file		
 #include <iostream>
@@ -12,8 +10,6 @@ using namespace cv;
 using namespace std;
 
 int main(int argc, char* argv[]) {
-
-	auto start = chrono::steady_clock::now();
 
     	/* Do your stuff here */
 	MPI_Status status;
@@ -213,19 +209,12 @@ int main(int argc, char* argv[]) {
 		cout<<"showKeyPoint() invoked\n";
 		corner.showKeyPoints(rootImage, keyFinal);	
 
-//		auto end = chrono::steady_clock::now();
-//		auto diff = end - start;
-//		cout << chrono::duration <double, milli> (diff).count() << " ms" << endl;
-
 
 		namedWindow("Displayed Image", CV_WINDOW_NORMAL); 	//This OpenCV function with CV_WINDOW_NORMAL allows to resize the window
 		
 		imshow("Displayed Image", rootImage);			//This OpenCV function allows to display the final result in a previously defined window
 	
-		auto end = chrono::steady_clock::now();
-		auto diff = end - start;
-		cout << chrono::duration <double, milli> (diff).count() << " ms" << endl;
-		
+
 		waitKey(0);
 	}
 	
